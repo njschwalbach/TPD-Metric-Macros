@@ -8,6 +8,7 @@ Sub Bug_numbers_weekly_automated()
 ' One common possibility is if you copy the data into an already open SS, the sheet numbers will not line up.
 ' This macro will run best if you download right from jira and run this macro in that SS
 
+' adding this to QA to merge to prod
 
 '
 Dim SheetName As String
