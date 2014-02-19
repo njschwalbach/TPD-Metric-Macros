@@ -1,0 +1,198 @@
+Sub Bug_numbers_weekly_automated()
+'
+' Bug_numbers_weekly_automated Macro
+'
+'This Macro will copy all needed information over to a "raw" data tab
+' then it will analyze the data in 2 pivot tables to give you the 5 stat needed
+' right now 2/17/14 there is no error handling
+' One common possibility is if you copy the data into an already open SS, the sheet numbers will not line up.
+' This macro will run best if you download right from jira and run this macro in that SS
+
+'Merge into prod
+
+Dim SheetName As String
+Dim issueTypeAddress As Range
+Dim keyAddress As Range
+Dim statusAddress As Range
+Dim createdAddress As Range
+Dim escalationAddress As Range
+Dim resolvedAddress As Range
+Dim ErrMsg As String
+Dim msg As String
+    
+    Rows("1:3").Select
+    Selection.Delete Shift:=xlUp
+    ActiveSheet.Shapes.Range(Array("Picture 1")).Select
+    Selection.Delete
+    Cells.Select
+    Selection.UnMerge
+    Sheets.Add After:=Sheets(Sheets.Count)
+    Sheets("Sheet1").Select
+    Sheets("Sheet1").Name = "Raw Data"
+    Sheets("general_report").Select
+    Set issueTypeAddress = Range("A1:AZ1").Find("Issue Type")
+    If issueTypeAddress Is Nothing Then
+        MsgBox "Issue Type Column was not found. Please export new file from JIRA with Issue Type and rerun Macro."
+        Exit Sub
+    End If
+    Range(issueTypeAddress, issueTypeAddress.EntireColumn).Select
+    Selection.Copy
+    Sheets("Raw Data").Select
+    Range("A1").Select
+    ActiveSheet.Paste
+    Sheets("general_report").Select
+    Set keyAddress = Range("A1:AZ1").Find("Key")
+    If keyAddress Is Nothing Then
+        MsgBox "Key Column was not found. Please export new file from JIRA with Key and rerun Macro."
+        Exit Sub
+    End If
+    Range(keyAddress, keyAddress.EntireColumn).Select
+    Selection.Copy
+    Sheets("Raw Data").Select
+    Range("B1").Select
+    ActiveSheet.Paste
+    Sheets("general_report").Select
+    Set statusAddress = Range("A1:AZ1").Find("Status")
+    If statusAddress Is Nothing Then
+        MsgBox "Status Column was not found. Please export new file from JIRA with Status and rerun Macro."
+        Exit Sub
+    End If
+    Range(statusAddress, statusAddress.EntireColumn).Select
+    Selection.Copy
+    Sheets("Raw Data").Select
+    Range("C1").Select
+    ActiveSheet.Paste
+    Sheets("general_report").Select
+    Set createdAddress = Range("A1:AZ1").Find("Created")
+    If createdAddress Is Nothing Then
+        MsgBox "Created Column was not found. Please export new file from JIRA with Created and rerun Macro."
+        Exit Sub
+    End If
+    Range(createdAddress, createdAddress.EntireColumn).Select
+    Selection.Copy
+    Sheets("Raw Data").Select
+    Range("D1").Select
+    ActiveSheet.Paste
+    Sheets("general_report").Select
+    Set escalationAddress = Range("A1:AZ1").Find("Escalation")
+    If escalationAddress Is Nothing Then
+        MsgBox "Escalation Column was not found. Please export new file from JIRA with Escalation and rerun Macro."
+        Exit Sub
+    End If
+    Range(escalationAddress, escalationAddress.EntireColumn).Select
+    Selection.Copy
+    Sheets("Raw Data").Select
+    Range("E1").Select
+    ActiveSheet.Paste
+    Sheets("general_report").Select
+    Set resolvedAddress = Range("A1:AZ1").Find("Resolved")
+    If resolvedAddress Is Nothing Then
+        MsgBox "Resolved Column was not found. Please export new file from JIRA with Resolved and rerun Macro."
+        Exit Sub
+    End If
+    Range(resolvedAddress, resolvedAddress.EntireColumn).Select
+    Selection.Copy
+    Sheets("Raw Data").Select
+    Range("F1").Select
+    ActiveSheet.Paste
+    Sheets.Add After:=Sheets(Sheets.Count)
+    Sheets("Sheet2").Select
+    Sheets("Sheet2").Name = "Weekly Metrics"
+    ActiveCell.FormulaR1C1 = "Opened Last Week"
+    Range("A2").Select
+    ActiveCell.FormulaR1C1 = "Closed Last Week"
+    Range("A3").Select
+    ActiveCell.FormulaR1C1 = "Total Backlog"
+    Range("A4").Select
+    ActiveCell.FormulaR1C1 = "Total Open Escalations"
+    Range("A5").Select
+    ActiveCell.FormulaR1C1 = "Average # of Days Open"
+    Range("A6").Select
+    Columns("A:A").EntireColumn.AutoFit
+    Sheets("Raw Data").Select
+    Cells.Select
+    Sheets.Add
+    ActiveWorkbook.PivotCaches.Create(SourceType:=xlDatabase, SourceData:= _
+        "Raw Data!R1C1:R1048576C6", Version:=xlPivotTableVersion14).CreatePivotTable _
+        TableDestination:="Sheet3!R3C1", TableName:="PivotTable7", DefaultVersion _
+        :=xlPivotTableVersion14
+    Sheets("Sheet3").Select
+    Cells(3, 1).Select
+    Sheets("Sheet3").Select
+    Sheets("Sheet3").Name = "Created Last Week"
+    With ActiveSheet.PivotTables("PivotTable7").PivotFields("Created")
+        .Orientation = xlRowField
+        .Position = 1
+    End With
+    ActiveSheet.PivotTables("PivotTable7").AddDataField ActiveSheet.PivotTables( _
+        "PivotTable7").PivotFields("Key"), "Count of Key", xlCount
+    Range("A3").Select
+    ActiveSheet.PivotTables("PivotTable7").PivotFields("Created").PivotFilters.Add _
+        Type:=xlDateLastWeek
+    Sheets("Weekly Metrics").Select
+    Range("B1").Select
+    ActiveCell.FormulaR1C1 = "=GETPIVOTDATA(""Key"",'Created Last Week'!R3C1)"
+    Range("B2").Select
+    Sheets("Raw Data").Select
+    Sheets.Add
+    ActiveWorkbook.Worksheets("Created Last Week").PivotTables("PivotTable7"). _
+        PivotCache.CreatePivotTable TableDestination:="Sheet4!R3C1", TableName:= _
+        "PivotTable8", DefaultVersion:=xlPivotTableVersion14
+    Sheets("Sheet4").Select
+    Cells(3, 1).Select
+    With ActiveSheet.PivotTables("PivotTable8").PivotFields("Resolved")
+        .Orientation = xlRowField
+        .Position = 1
+    End With
+    ActiveSheet.PivotTables("PivotTable8").AddDataField ActiveSheet.PivotTables( _
+        "PivotTable8").PivotFields("Key"), "Count of Key", xlCount
+    ActiveSheet.PivotTables("PivotTable8").PivotFields("Resolved").PivotFilters. _
+        Add Type:=xlDateLastWeek
+    Sheets("Weekly Metrics").Select
+    ActiveCell.FormulaR1C1 = "=GETPIVOTDATA(""Key"",Sheet4!R3C1)"
+    Range("B3").Select
+    Sheets("Sheet4").Select
+    Sheets("Sheet4").Name = "Closed Last Week"
+    Sheets("Weekly Metrics").Select
+    ActiveCell.FormulaR1C1 = _
+        "=COUNTIF('Raw Data'!C[1],""<>Status"")-COUNTBLANK('Raw Data'!C[1])-COUNTIF('Raw Data'!C[1],""Closed"")"
+    Range("B3").Select
+    ActiveCell.FormulaR1C1 = _
+        "=COUNTIF('Raw Data'!C[1],""<>Status"")-COUNTBLANK('Raw Data'!C[1])-COUNTIF('Raw Data'!C[1],""Closed"")-COUNTIF('Raw Data'!C[1],""Regression Testing In Process"")-COUNTIF('Raw Data'!C[1],""Additional Requestor Information"")"
+    Range("B4").Select
+     ActiveCell.FormulaR1C1 = _
+        "=COUNTIFS('Raw Data'!C[1],""<>Status"",'Raw Data'!C[3],""Yes"")-COUNTIFS('Raw Data'!C[1],""Closed"",'Raw Data'!C[3],""Yes"")-COUNTIFS('Raw Data'!C[1],""Regression Resting In Process"",'Raw Data'!C[3],""Yes"")-COUNTIFS('Raw Data'!C[1],""Additional Requestor Information"",'Raw Data'!C[3],""Yes"")"
+    Range("B5").Select
+    Sheets("Raw Data").Select
+    Columns("E:E").Select
+    Selection.Insert Shift:=xlToRight, CopyOrigin:=xlFormatFromLeftOrAbove
+    Range("E1").Select
+    ActiveCell.FormulaR1C1 = "Today's Date"
+    Range("E2").Activate
+    ActiveCell.FormulaR1C1 = "=TODAY()"
+    Range("E2").Select
+    Selection.AutoFill Destination:=Range("E2:E1000")
+    Range("E2:E1000").Select
+    Sheets("Raw Data").Select
+    Columns("F:F").Select
+    Selection.Insert Shift:=xlToRight, CopyOrigin:=xlFormatFromLeftOrAbove
+    Columns("F:F").Select
+    Selection.NumberFormat = "General"
+    Range("F2").Select
+    ActiveCell.FormulaR1C1 = "=NETWORKDAYS(RC[-2],RC[-1])"
+    Range("F2").Select
+    Selection.AutoFill Destination:=Range("F2:F1000")
+    Range("F2:F1000").Select
+    Range("F1").Select
+    ActiveCell.FormulaR1C1 = "Net Working Days"
+    Range("D2").Select
+    Sheets("Weekly Metrics").Select
+    Range("B5").Select
+    Selection.NumberFormat = "General"
+    Range("B5").Select
+  
+    ActiveCell.FormulaR1C1 = _
+         "=AVERAGEIFS('Raw Data'!C[4],'Raw Data'!C[1],""<>Closed"",'Raw Data'!C[1],""<>Additional Requestor Information"",'Raw Data'!C[1],""<>Regression Testing In Process"",'Raw Data'!C[4],""<1000"")"
+    Range("B6").Select
+    
+End Sub
